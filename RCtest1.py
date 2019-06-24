@@ -27,6 +27,7 @@ trial = log1.loc[log1['test'] <1]
 X = trial.drop(labels=['username', 'rem', 'rem2', 'rem3', 'rem4'], axis=1).values
 y = trial.rem.values #change to 2 and 3 for different experiment
 seed= 1003
+# Here is some data processing
 np.random.seed(seed)
 tf.set_random_seed(seed)
 train_index = np.random.choice(len(X), round(len(X) * 0.8), replace=False)
@@ -41,6 +42,8 @@ train_yy = y[train_index2]
 scaler = sk.preprocessing.StandardScaler()
 train_X = scaler.fit_transform(train_X)
 test_X = scaler.transform(test_X)
+
+# Add a 1 layer encoder to reduce features using for validation part of the training data
 
 encoding_dim = 22
 input_dim = Input(shape=(105,))
@@ -57,6 +60,7 @@ history = autoencoder.fit(train_X, train_X,
     shuffle=True,
     validation_data=(test_X, test_X))
 
+#Use the encoderreduce the inputs for machine learning and adding the real test data
 
 x_train = encoder.predict (train_xx)
 y_train = train_yy
@@ -70,6 +74,7 @@ test_yy = yy[test_index2]
 xx_test = encoder.predict (test_xx)
 yy_test = test_yy
 
+#Create the model for hyperparameter optimization in Talos
 
 
 def simple_bpad_ttrad_model (x_train, y_train, x_test, y_test, params):
@@ -104,38 +109,6 @@ p = {'lr':(0.8, 1.2, 3),
 h = ta.Scan(x_train, y_train, params=p,
             model=simple_bpad_ttrad_model)
 
+#This gives the best parameters to run on the encoded model
 
 
-=====================================================================================================================-
-encoding_dim = 26
-input_dim = Input(shape=(105,))
-
-encoded = Dense(encoding_dim, activation='relu',)(input_dim)
-decoded = Dense(105, activation='sigmoid')(encoded)
-autoencoder = Model(input_dim, decoded)
-encoder = Model(input_dim, encoded)
-encoded_input = Input(shape=(encoding_dim,))
-decoder_layer = autoencoder.layers[-1]
-decoder = Model(encoded_input, decoder_layer(encoded_input))
-
-
-
-
-
-plt.plot(history.history['loss'])
-plt.plot(history.history['val_loss'])
-plt.title('Autoencoder loss history')
-plt.ylabel('Loss')
-plt.xlabel('epoch')
-plt.legend(['Train loss', 'Test loss'], loc='upper left')
-plt.show()
-
-
-input_dim = Input(shape=(105,))
-encoded = Dense(52, activation='relu')(input_dim)
-#encoded = Dense(26, activation='relu')(encoded)
-#encoded = Dense(13, activation='relu')(encoded)
-#decoded = Dense(26, activation='relu')(encoded)
-
-decoded = Dense(52, activation='relu')(encoded)
-decoded = Dense(105, activation='sigmoid')(decoded)
