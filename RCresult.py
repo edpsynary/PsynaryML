@@ -99,37 +99,3 @@ model.predict_classes(xx_test, verbose=1)
 
 
 
-###################################################################################################
-def simple_bpad_ttrad_model (x_train, y_train, x_test, y_test, params):
-    model = Sequential()
-    model.add(Dense(params['first_neuron'],
-                   input_dim=train_X.shape[1],
-                   activation='relu'))
-    keras.layers.Dropout(params['dropout'])
-    model.add(Dense(1,
-                   activation=params['last_activation']))
-    model.compile(optimizer=params['optimizer'](lr=lr_normalizer(params['lr'], params['optimizer'])),
-                   loss=params['losses'],
-                   metrics=['acc'])
-    earlystop = EarlyStopping(monitor='val_acc', patience=4, mode='auto')
-    out = model.fit(x_train, y_train,
-                    batch_size=params['batch_size'],
-                    epochs=params['epochs'],
-                    verbose=0,
-                    validation_data=[x_test, y_test])
-    return out, model
-
-p = {'lr':(0.8, 1.2, 3),
-     'first_neuron':[42, 55, 64, 73, 80],
-     'hidden_layers':[0, 1, 2],
-     'batch_size': [200, 300, 400],
-     'epochs': [300],
-     'dropout': (0, 0.1, 3),
-     'optimizer': [Adam, Nadam, RMSprop],
-     'losses': ['binary_crossentropy'],
-     'last_activation': ['sigmoid']}
-
-h = ta.Scan(x_train, y_train, params=p,
-            model=simple_bpad_ttrad_model)
-
-###############################################################################################
