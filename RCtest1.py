@@ -27,6 +27,7 @@ trial = log1.loc[log1['test'] <1]
 X = trial.drop(labels=['username', 'rem', 'rem2', 'rem3', 'rem4'], axis=1).values
 y = trial.rem.values #change to 2 and 3 for different experiment
 seed= 1003
+
 # Here is some data processing
 np.random.seed(seed)
 tf.set_random_seed(seed)
@@ -43,7 +44,9 @@ scaler = sk.preprocessing.StandardScaler()
 train_X = scaler.fit_transform(train_X)
 test_X = scaler.transform(test_X)
 
-# Add a 1 layer encoder to reduce features using for validation part of the training data
+
+
+#encoder
 
 encoding_dim = 22
 input_dim = Input(shape=(105,))
@@ -60,8 +63,7 @@ history = autoencoder.fit(train_X, train_X,
     shuffle=True,
     validation_data=(test_X, test_X))
 
-#Use the encoderreduce the inputs for machine learning and adding the real test data
-
+#use encoder to reduce the inputs for the model
 x_train = encoder.predict (train_xx)
 y_train = train_yy
 x_test = encoder.predict (test_X)
@@ -74,41 +76,10 @@ test_yy = yy[test_index2]
 xx_test = encoder.predict (test_xx)
 yy_test = test_yy
 
-#Create the model for hyperparameter optimization in Talos
-
-
-def simple_bpad_ttrad_model (x_train, y_train, x_test, y_test, params):
-    model = Sequential()
-    model.add(Dense(params['first_neuron'],
-                   input_dim=x_train.shape[1],
-                   activation='relu'))
-    keras.layers.Dropout(params['dropout'])
-    model.add(Dense(1,
-                   activation=params['last_activation']))
-    model.compile(optimizer=params['optimizer'](lr=lr_normalizer(params['lr'], params['optimizer'])),
-                   loss=params['losses'],
-                   metrics=['acc'])
-    earlystop = EarlyStopping(monitor='val_acc', patience=4, mode='auto')
-    out = model.fit(x_train, y_train,
-                    batch_size=params['batch_size'],
-                    epochs=params['epochs'],
-                    verbose=0,
-                    validation_data=[x_test, y_test])
-    return out, model
-
-p = {'lr':(0.8, 1.2, 3),
-     'first_neuron':[42, 55, 64, 73, 80],
-     'hidden_layers':[0, 1, 2],
-     'batch_size': [200, 300, 400],
-     'epochs': [300],
-     'dropout': (0, 0.1, 3),
-     'optimizer': [Adam, Nadam, RMSprop],
-     'losses': ['binary_crossentropy'],
-     'last_activation': ['sigmoid']}
-
-h = ta.Scan(x_train, y_train, params=p,
-            model=simple_bpad_ttrad_model)
-
-#This gives the best parameters to run on the encoded model
-
-
+#create the ginal model, and chose best epochs
+model = Sequential()
+model.add(Dense(units=22, activation='softmax', input_dim=22))
+model.add(Dense(units=30, activation='relu'))
+model.add(Dense(1, kernel_initializer='normal', activation='sigmoid'))
+model.compile(optimizer='Adam', loss='binary_crossentropy', metrics=['accuracy'])
+history = model.fit(x_train, y_train, epochs=200, verbose=0, batch_size=300, validation_data=(xx_test, yy_test))
